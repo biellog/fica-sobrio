@@ -114,7 +114,12 @@ não instala a versão nova por cima da antiga.
 O site de divulgação fica em **https://biellog.github.io/fica-sobrio/**. Ele tem botão de download
 direto do APK, o jogo jogável no navegador, uma calculadora de gastos, FAQ e a política de
 privacidade (exigida pela Play Store). Ele é publicado sozinho pelo workflow **🌐 Publicar site**
-sempre que algo muda na pasta `site/`.
+sempre que algo muda na pasta `site-go/`.
+
+O site é feito em **Go**: o gerador (`site-go/cmd/gerar`) monta as páginas a partir dos modelos em
+`site-go/modelos` e toda a parte interativa (calculadora, contador, o mini-game e a página de convite)
+é Go compilado para WebAssembly (`site-go/wasm`), com as regras em `site-go/logica` testadas com `go test`.
+Para gerar no computador: `cd site-go && GOOS=js GOARCH=wasm go build -o ../_site/app.wasm ./wasm && go run ./cmd/gerar`.
 
 ## 🧱 Estrutura
 
@@ -132,7 +137,7 @@ lib/
 supabase/migrations/        # estrutura do banco (aplicada pelo GitHub Actions)
 .github/workflows/apk.yml   # compila e publica o APK
 .github/workflows/supabase.yml  # cria/atualiza o banco
-site/                       # site de divulgação (GitHub Pages)
+site-go/                    # site de divulgação em Go (gerador + WebAssembly, GitHub Pages)
 .github/workflows/site.yml  # publica o site
 ```
 

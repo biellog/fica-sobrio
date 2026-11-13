@@ -1,10 +1,12 @@
 name: 🌐 Publicar site
 
-# Publica a pasta site/ no GitHub Pages: https://<usuario>.github.io/fica-sobrio/
+# Gera o site com Go (site-go/) e publica no GitHub Pages: https://<usuario>.github.io/fica-sobrio/
+# As páginas são montadas pelo gerador em Go e toda a interatividade é Go compilado
+# para WebAssembly (sem JavaScript escrito à mão).
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'lib/**', 'web/**', 'assets/**', 'pubspec.*', '.github/workflows/site.yml']
+    paths: ['site-go/**', 'lib/**', 'web/**', 'assets/**', 'pubspec.*', '.github/workflows/site.yml']
   workflow_dispatch:
 
 permissions:
@@ -25,7 +27,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Jogo Brilha Junto para navegador -> site/jogar/
+      # Site em Go: testes, WebAssembly e páginas -> _site/
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: site-go/go.mod
+      - name: Gerar o site (Go)
+        working-directory: site-go
+        run: |
+          test -z "$(gofmt -l .)" || { echo "::error::rode gofmt -w em site-go"; gofmt -l .; exit 1; }
+          go vet ./logica ./cmd/...
+          GOOS=js GOARCH=wasm go vet ./wasm
+          go test ./...
+          GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o ../_site/app.wasm ./wasm
+          go run ./cmd/gerar -saida ../_site
+          ls -la ../_site
+
+      # Jogos online para navegador (Flutter) -> _site/jogar/
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.7'
@@ -42,13 +60,13 @@ jobs:
             --base-href "/${{ github.event.repository.name }}/jogar/" \
             --dart-define=SUPABASE_URL="$URL" --dart-define=SUPABASE_ANON_KEY="$CHAVE" \
             --dart-define=LINK_DOWNLOAD=https://biellog.github.io/fica-sobrio/
-          rm -rf site/jogar && cp -r build/web site/jogar
+          rm -rf _site/jogar && cp -r build/web _site/jogar
 
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _site
       - id: deploy
         uses: actions/deploy-pages@v4

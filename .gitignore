@@ -13,3 +13,6 @@ android/key.properties
 .env
 supabase/.temp/
 supabase/.branches/
+
+# site gerado pelo Go (site-go/)
+_site/

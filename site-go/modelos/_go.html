@@ -1,0 +1,7 @@
+{{define "go"}}
+<!-- Toda a interatividade da página é Go compilado para WebAssembly (site-go/wasm).
+     O navegador só sabe iniciar WebAssembly por JavaScript: por isso ficam aqui apenas
+     o arquivo oficial do Go (wasm_exec.js) e as 3 linhas que dão a partida no app.wasm. -->
+<script src="wasm_exec.js?v={{.Versao}}" defer></script>
+<script defer src="iniciar.js?v={{.Versao}}"></script>
+{{end}}
